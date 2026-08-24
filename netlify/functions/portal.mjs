@@ -1,4 +1,4 @@
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 
 const STORE_NAME = 'ferrn-project-portal';
@@ -141,51 +141,52 @@ function readCookie(request, name) {
   return null;
 }
 
-function sessionKey(token) {
-  return `sessions/${sha256(token)}`;
+function sessionSigningKey(project) {
+  return createHash('sha256')
+    .update(`ferrn-project-session-v1:${project.id}:${project.password}`)
+    .digest();
 }
 
-async function createSession(projectId) {
-  const token = randomBytes(32).toString('base64url');
-  await store().setJSON(sessionKey(token), {
-    projectId,
+function createSession(project) {
+  const payload = Buffer.from(JSON.stringify({
+    projectId: project.id,
     expiresAt: Date.now() + (SESSION_TTL_SECONDS * 1000),
-  });
-  return token;
+  })).toString('base64url');
+
+  const signature = createHmac('sha256', sessionSigningKey(project))
+    .update(payload)
+    .digest('base64url');
+
+  return `${payload}.${signature}`;
 }
 
-async function readSession(request) {
-  const token = readCookie(request, SESSION_COOKIE);
-  if (!token) return null;
+function verifySessionToken(token, project) {
+  if (!token || !token.includes('.')) return null;
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return null;
 
-  const key = sessionKey(token);
-  const session = await store().get(key, {
-    type: 'json',
-    consistency: 'strong',
-  });
+  const expected = createHmac('sha256', sessionSigningKey(project))
+    .update(payload)
+    .digest('base64url');
 
-  if (!session?.projectId || !session?.expiresAt) return null;
+  if (!safeEqualText(signature, expected)) return null;
 
-  if (Number(session.expiresAt) <= Date.now()) {
-    try { await store().delete(key); } catch {}
+  try {
+    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (session?.projectId !== project.id) return null;
+    if (!session?.expiresAt || Number(session.expiresAt) <= Date.now()) return null;
+    return session;
+  } catch {
     return null;
   }
-
-  return { ...session, token };
-}
-
-async function deleteSession(request) {
-  const token = readCookie(request, SESSION_COOKIE);
-  if (!token) return;
-  try { await store().delete(sessionKey(token)); } catch {}
 }
 
 function sessionCookie(token) {
-  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${SESSION_TTL_SECONDS}`;
+  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}`;
 }
 
 function clearSessionCookie() {
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 }
 
 async function listProjectPages(projectId) {
@@ -261,11 +262,15 @@ async function clearRateLimit(rate) {
 }
 
 async function requireSessionProject(request) {
-  const session = await readSession(request);
-  if (!session) return null;
+  const token = readCookie(request, SESSION_COOKIE);
+  if (!token) return null;
 
   const projects = await readProjects();
-  return projects.find((project) => project.id === session.projectId) || null;
+  for (const project of projects) {
+    const session = verifySessionToken(token, project);
+    if (session) return project;
+  }
+  return null;
 }
 
 export default async (request, context) => {
@@ -292,7 +297,7 @@ export default async (request, context) => {
       const projects = await readProjects();
       if (!projects.length) {
         return json({
-          error: 'This workspace is not available yet. Please contact Ferrn Agency for access.',
+          error: 'Project access has not been configured yet. Open Manage projects to finish setup.',
           code: 'PORTAL_NOT_CONFIGURED',
         }, 503);
       }
@@ -309,13 +314,13 @@ export default async (request, context) => {
       if (!project || !passwordMatches(password, project.password)) {
         await registerFailedLogin(rate);
         return json({
-          error: 'We could not verify those details. Check the project name and password, then try again.',
+          error: 'We could not verify those details. Check the project code and password, then try again.',
           code: 'INVALID_CREDENTIALS',
         }, 401);
       }
 
       await clearRateLimit(rate);
-      const token = await createSession(project.id);
+      const token = createSession(project);
 
       return json(
         await projectPayload(project),
@@ -328,15 +333,14 @@ export default async (request, context) => {
       const project = await requireSessionProject(request);
       if (!project) {
         return json({
-          error: 'Your session has ended. Please sign in again.',
-          code: 'SESSION_EXPIRED',
-        }, 401);
+          error: 'Please sign in to continue.',
+          code: 'AUTH_REQUIRED',
+        }, 401, { 'Set-Cookie': clearSessionCookie() });
       }
       return json(await projectPayload(project));
     }
 
     if (action === 'logout' && request.method === 'POST') {
-      await deleteSession(request);
       return json({ ok: true }, 200, {
         'Set-Cookie': clearSessionCookie(),
       });
@@ -345,9 +349,12 @@ export default async (request, context) => {
     if (action === 'page' && request.method === 'GET') {
       const project = await requireSessionProject(request);
       if (!project) {
-        return new Response('Your session has ended. Please return to the Ferrn workspace and sign in again.', {
+        return new Response('Please return to the Ferrn workspace and sign in again.', {
           status: 401,
-          headers: { 'Cache-Control': 'no-store' },
+          headers: {
+            'Cache-Control': 'no-store',
+            'Set-Cookie': clearSessionCookie(),
+          },
         });
       }
 
@@ -387,7 +394,7 @@ export default async (request, context) => {
     if (action === 'admin-upload' && request.method === 'POST') {
       if (!process.env.ADMIN_UPLOAD_KEY) {
         return json({
-          error: 'Admin tools are not available yet. Please finish the portal setup in Netlify.',
+          error: 'Admin tools are not configured yet. Add ADMIN_UPLOAD_KEY in Netlify and redeploy.',
           code: 'ADMIN_NOT_CONFIGURED',
         }, 503);
       }
@@ -450,7 +457,7 @@ export default async (request, context) => {
     if (action === 'admin-csv' && request.method === 'POST') {
       if (!process.env.ADMIN_UPLOAD_KEY) {
         return json({
-          error: 'Admin tools are not available yet. Please finish the portal setup in Netlify.',
+          error: 'Admin tools are not configured yet. Add ADMIN_UPLOAD_KEY in Netlify and redeploy.',
           code: 'ADMIN_NOT_CONFIGURED',
         }, 503);
       }
