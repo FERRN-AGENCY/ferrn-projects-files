@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#080808" />
+  <title>Ferrn Agency · Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--orange:#ff4100;--orange2:#ff632d;--bg:#070707;--panel:#101010;--panel2:#151515;--line:rgba(255,255,255,.09);--text:#f7f7f7;--muted:#949494;--danger:#ff6565;--success:#6ee39a}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"Poppins",sans-serif;background:#080808;color:var(--text)}body{background:radial-gradient(circle at 90% 0,rgba(255,65,0,.08),transparent 28%),#080808}button,input{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}
+    .shell{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
+    .sidebar{position:sticky;top:0;height:100vh;padding:24px 16px;background:#060606;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:24px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:#050505;display:grid;place-items:center}.logo svg{width:23px}.brand b{font-size:15px}.brand span{display:block;color:#6f6f6f;font-size:10px;margin-top:1px}
+    .nav-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#5f5f5f;font-weight:700}.nav-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;background:linear-gradient(135deg,var(--orange),#d73700);font-size:12px;font-weight:700}.spacer{flex:1}.back{color:#8f8f8f;font-size:11px;padding:10px 12px;border-radius:10px}.back:hover{background:#111;color:#fff}
+    .main{min-width:0}.header{padding:26px 30px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:18px;position:sticky;top:0;background:rgba(8,8,8,.92);backdrop-filter:blur(14px);z-index:5}.header h1{margin:0;font-size:clamp(26px,3vw,40px);letter-spacing:-.04em}.header p{margin:5px 0 0;color:var(--muted);font-size:11px}.badge{border:1px solid rgba(255,65,0,.18);background:rgba(255,65,0,.07);border-radius:999px;padding:9px 12px;font-size:10px;font-weight:600;white-space:nowrap}
+    .content{padding:28px 30px 50px;max-width:1280px;margin:0 auto}.admin-gate{max-width:560px;margin:8vh auto 0;padding:28px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,#151515,#0d0d0d);box-shadow:0 30px 80px rgba(0,0,0,.35)}.admin-gate h2{margin:0 0 7px}.admin-gate p{color:var(--muted);font-size:11px;line-height:1.6}.gate-row{display:flex;gap:10px;margin-top:18px}
+    input{width:100%;height:46px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#0c0c0c;color:#fff;outline:0}input:focus{border-color:rgba(255,65,0,.6);box-shadow:0 0 0 4px rgba(255,65,0,.08)}
+    .btn{height:46px;padding:0 17px;border:0;border-radius:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--orange),var(--orange2));white-space:nowrap}.btn.secondary{background:#181818;border:1px solid var(--line)}.btn.danger{background:rgba(255,75,75,.1);border:1px solid rgba(255,75,75,.24);color:#ff9999}.btn:hover{transform:translateY(-1px)}
+    .workspace{display:none}.workspace.show{display:block}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}.toolbar h2{margin:0;font-size:22px}.toolbar p{margin:3px 0 0;color:var(--muted);font-size:10px}.project-list{display:grid;gap:11px}.project-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#131313,#0f0f0f)}.project-row h3{margin:0 0 4px;font-size:14px}.project-row p{margin:0;color:#7f7f7f;font-size:9px}.project-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.chip{font-size:8px;border:1px solid var(--line);border-radius:999px;padding:5px 7px;color:#8e8e8e}.actions{display:flex;gap:8px}.actions .btn{height:38px;padding:0 12px;font-size:10px}
+    .empty{padding:30px;border:1px dashed var(--line);border-radius:16px;text-align:center;color:#858585;font-size:11px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(12px);display:none;place-items:center;padding:20px;z-index:20}.modal-backdrop.show{display:grid}.modal{width:min(820px,100%);max-height:calc(100vh - 40px);overflow:auto;border:1px solid var(--line);border-radius:22px;background:#101010}.modal-head{position:sticky;top:0;background:#101010;border-bottom:1px solid var(--line);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}.modal-head h2{margin:0;font-size:20px}.modal-body{padding:20px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:10px;font-weight:600;color:#b7b7b7}.field small{font-size:8px;color:#666}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.message{display:none;margin-top:12px;padding:10px 12px;border-radius:11px;font-size:10px}.message.show{display:block}.message.error{background:rgba(255,75,75,.08);border:1px solid rgba(255,75,75,.22);color:#ffb1b1}.message.success{background:rgba(110,227,154,.08);border:1px solid rgba(110,227,154,.22);color:#b9ffd1}
+    @media(max-width:850px){.shell{grid-template-columns:1fr}.sidebar{height:auto;position:static;display:flex;flex-direction:row;align-items:center;padding:14px 16px}.sidebar .nav-label,.sidebar .nav-item,.sidebar .spacer{display:none}.back{margin-left:auto}.header{padding:20px}.content{padding:20px}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+    @media(max-width:580px){.header{align-items:flex-start}.badge{display:none}.toolbar{align-items:flex-start;flex-direction:column}.project-row{grid-template-columns:1fr}.actions{justify-content:flex-start}.gate-row{flex-direction:column}.gate-row .btn{width:100%}.modal-actions{flex-direction:column-reverse}.modal-actions .btn{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo"><svg viewBox="0 0 164 164"><path d="M163.419 0V163.419H0V109.064H107.208V52.9022H17.0028V0H163.419Z" fill="#FF4100"/></svg></div><div><b>Ferrn Agency</b><span>Admin portal</span></div></div>
+      <div class="nav-label">Management</div>
+      <div class="nav-item">Project access</div>
+      <div class="spacer"></div>
+      <a class="back" href="/">← Back to project portal</a>
+    </aside>
+    <main class="main">
+      <header class="header"><div><h1>Project management.</h1><p>Add, edit and remove project access without touching CSV or GitHub.</p></div><div class="badge">Ferrn private admin</div></header>
+      <div class="content">
+        <section id="gate" class="admin-gate"><h2>Admin access</h2><p>Enter your Netlify <b>ADMIN_UPLOAD_KEY</b>. The key is used only to authorize this admin session and is not saved in the browser.</p><div class="gate-row"><input id="adminKey" type="password" placeholder="Admin key" autocomplete="off"><button id="unlockBtn" class="btn">Open admin portal</button></div><div id="gateMessage" class="message"></div></section>
+
+        <section id="workspace" class="workspace">
+          <div class="toolbar"><div><h2>Projects</h2><p id="projectCount">0 projects configured</p></div><button id="addProjectBtn" class="btn">+ Add project</button></div>
+          <div id="projectList" class="project-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="projectModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-head"><h2 id="modalTitle">Add project</h2><button id="closeModalBtn" class="btn secondary">Close</button></div>
+      <form id="projectForm" class="modal-body">
+        <div class="grid">
+          <div class="field"><label for="projectCode">Project code</label><input id="projectCode" required placeholder="e.g. AWJAI"><small>Used on the client login screen.</small></div>
+          <div class="field"><label for="projectName">Project name</label><input id="projectName" required placeholder="African Women Judges Association"></div>
+          <div class="field"><label for="projectPassword">Project password</label><input id="projectPassword" type="password" placeholder="Create project password"><small id="passwordHint">Required for a new project.</small></div>
+          <div class="field"><label for="brandAssets">Ferrn brand assets</label><input id="brandAssets" type="url" placeholder="Google Drive brand-assets link"></div>
+          <div class="field full"><label for="projectFiles">Project brief / files</label><input id="projectFiles" type="url" placeholder="Google Drive project brief or project-files folder"></div>
+          <div class="field full"><label for="figma">Figma workspace</label><input id="figma" type="url" placeholder="https://www.figma.com/design/..."></div>
+          <div class="field"><label for="backendRepo">Back-end GitHub repository</label><input id="backendRepo" type="url" placeholder="https://github.com/FERRN-AGENCY/PROJECT-BACKEND"></div>
+          <div class="field"><label for="frontendRepo">Front-end GitHub repository</label><input id="frontendRepo" type="url" placeholder="https://github.com/FERRN-AGENCY/PROJECT-FRONTEND"></div>
+        </div>
+        <div id="formMessage" class="message"></div>
+        <div class="modal-actions"><button id="deleteBtn" class="btn danger" type="button" style="display:none;margin-right:auto">Delete project</button><button class="btn secondary" type="button" id="cancelBtn">Cancel</button><button id="saveBtn" class="btn" type="submit">Save project</button></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API='/.netlify/functions/admin-projects';
+    const $=id=>document.getElementById(id);
+    const state={key:'',projects:[],editing:null};
+
+    function message(el,text='',type='error'){el.textContent=text;el.className=`message${text?' show':''}${text?` ${type}`:''}`}
+    function esc(v=''){return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+    async function api(method='GET',body){const res=await fetch(API,{method,headers:{'X-Admin-Key':state.key,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});const data=await res.json().catch(()=>({}));if(!res.ok){const e=new Error(data.error||'Request failed');e.code=data.code;throw e}return data}
+
+    function render(){
+      $('projectCount').textContent=`${state.projects.length} project${state.projects.length===1?'':'s'} configured`;
+      if(!state.projects.length){$('projectList').innerHTML='<div class="empty">No projects yet. Click “Add project” to create the first one.</div>';return}
+      $('projectList').innerHTML=state.projects.map(p=>{
+        const chips=[p.projectFiles&&'Project brief/files',p.figma&&'Figma',p.backendRepo&&'Backend repo',p.frontendRepo&&'Frontend repo'].filter(Boolean);
+        return `<article class="project-row"><div><h3>${esc(p.name)}</h3><p>Project code · ${esc(p.id)}</p><div class="project-meta">${chips.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div></div><div class="actions"><button class="btn secondary" data-edit="${esc(p.id)}">Edit project</button></div></article>`
+      }).join('');
+    }
+
+    async function loadProjects(){const data=await api();state.projects=data.projects||[];render()}
+    function openModal(project=null){state.editing=project?.id||null;$('modalTitle').textContent=project?'Edit project':'Add project';$('projectCode').value=project?.id||'';$('projectCode').disabled=Boolean(project);$('projectName').value=project?.name||'';$('projectPassword').value='';$('passwordHint').textContent=project?'Leave blank to keep the current password.':'Required for a new project.';$('brandAssets').value=project?.brandAssets||'';$('projectFiles').value=project?.projectFiles||'';$('figma').value=project?.figma||'';$('backendRepo').value=project?.backendRepo||'';$('frontendRepo').value=project?.frontendRepo||'';$('deleteBtn').style.display=project?'inline-flex':'none';message($('formMessage'));$('projectModal').classList.add('show')}
+    function closeModal(){$('projectModal').classList.remove('show');state.editing=null}
+
+    $('unlockBtn').addEventListener('click',async()=>{const key=$('adminKey').value.trim();message($('gateMessage'));if(!key){message($('gateMessage'),'Enter your admin key.');return}state.key=key;const btn=$('unlockBtn');btn.disabled=true;btn.textContent='Checking…';try{await loadProjects();$('gate').style.display='none';$('workspace').classList.add('show');$('adminKey').value=''}catch(e){state.key='';message($('gateMessage'),e.message||'Could not verify admin access.')}finally{btn.disabled=false;btn.textContent='Open admin portal'}});
+    $('adminKey').addEventListener('keydown',e=>{if(e.key==='Enter')$('unlockBtn').click()});
+    $('addProjectBtn').addEventListener('click',()=>openModal());
+    $('projectList').addEventListener('click',e=>{const btn=e.target.closest('[data-edit]');if(!btn)return;const project=state.projects.find(p=>p.id===btn.dataset.edit);if(project)openModal(project)});
+    $('closeModalBtn').addEventListener('click',closeModal);$('cancelBtn').addEventListener('click',closeModal);$('projectModal').addEventListener('click',e=>{if(e.target===$('projectModal'))closeModal()});
+
+    $('projectForm').addEventListener('submit',async e=>{e.preventDefault();message($('formMessage'));const payload={id:$('projectCode').value.trim().toUpperCase(),name:$('projectName').value.trim(),password:$('projectPassword').value,brandAssets:$('brandAssets').value.trim(),projectFiles:$('projectFiles').value.trim(),figma:$('figma').value.trim(),backendRepo:$('backendRepo').value.trim(),frontendRepo:$('frontendRepo').value.trim()};const btn=$('saveBtn');btn.disabled=true;btn.textContent='Saving…';try{await api('POST',payload);await loadProjects();closeModal()}catch(err){message($('formMessage'),err.message||'Could not save this project.')}finally{btn.disabled=false;btn.textContent='Save project'}});
+    $('deleteBtn').addEventListener('click',async()=>{if(!state.editing)return;const project=state.projects.find(p=>p.id===state.editing);if(!confirm(`Delete ${project?.name||state.editing}? This immediately removes its portal login access.`))return;const btn=$('deleteBtn');btn.disabled=true;btn.textContent='Deleting…';try{await api('DELETE',{id:state.editing});await loadProjects();closeModal()}catch(err){message($('formMessage'),err.message||'Could not delete this project.')}finally{btn.disabled=false;btn.textContent='Delete project'}});
+  </script>
+</body>
+</html>
