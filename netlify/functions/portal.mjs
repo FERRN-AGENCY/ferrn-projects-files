@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { getStore } from '@netlify/blobs';
 
 const STORE_NAME = 'ferrn-project-portal';
@@ -59,14 +59,18 @@ function parseCSV(text) {
     }
     cell += ch;
   }
+
   row.push(cell.trim());
   if (row.some((item) => item !== '')) rows.push(row);
 
   if (!rows.length) return [];
   const headers = rows[0].map(normalizeHeader);
+
   return rows.slice(1).map((values) => {
     const record = {};
-    headers.forEach((header, index) => { record[header] = values[index] ?? ''; });
+    headers.forEach((header, index) => {
+      record[header] = values[index] ?? '';
+    });
     return record;
   }).filter((record) => Object.values(record).some(Boolean));
 }
@@ -86,10 +90,16 @@ function normalizeProject(record) {
 }
 
 async function readProjects() {
-  const blobCSV = await store().get('config/projects.csv', { type: 'text', consistency: 'strong' });
+  const blobCSV = await store().get('config/projects.csv', {
+    type: 'text',
+    consistency: 'strong',
+  });
   const csv = blobCSV || process.env.PROJECTS_CSV || '';
   if (!csv.trim()) return [];
-  return parseCSV(csv).map(normalizeProject).filter((project) => project.id && project.password);
+
+  return parseCSV(csv)
+    .map(normalizeProject)
+    .filter((project) => project.id && project.password);
 }
 
 function publicProject(project) {
@@ -122,21 +132,6 @@ function passwordMatches(input, stored) {
   return safeEqualText(input, stored);
 }
 
-function sessionSecret() {
-  return process.env.SESSION_SECRET || '';
-}
-
-function signSession(projectId) {
-  const secret = sessionSecret();
-  if (!secret) throw new Error('SESSION_SECRET is not configured');
-  const payload = Buffer.from(JSON.stringify({
-    p: projectId,
-    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
-  })).toString('base64url');
-  const signature = createHmac('sha256', secret).update(payload).digest('base64url');
-  return `${payload}.${signature}`;
-}
-
 function readCookie(request, name) {
   const cookie = request.headers.get('cookie') || '';
   for (const part of cookie.split(';')) {
@@ -146,20 +141,43 @@ function readCookie(request, name) {
   return null;
 }
 
-function verifySession(request) {
-  const secret = sessionSecret();
+function sessionKey(token) {
+  return `sessions/${sha256(token)}`;
+}
+
+async function createSession(projectId) {
+  const token = randomBytes(32).toString('base64url');
+  await store().setJSON(sessionKey(token), {
+    projectId,
+    expiresAt: Date.now() + (SESSION_TTL_SECONDS * 1000),
+  });
+  return token;
+}
+
+async function readSession(request) {
   const token = readCookie(request, SESSION_COOKIE);
-  if (!secret || !token || !token.includes('.')) return null;
-  const [payload, signature] = token.split('.');
-  const expected = createHmac('sha256', secret).update(payload).digest('base64url');
-  if (!safeEqualText(signature, expected)) return null;
-  try {
-    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    if (!data?.p || !data?.exp || data.exp < Math.floor(Date.now() / 1000)) return null;
-    return data;
-  } catch {
+  if (!token) return null;
+
+  const key = sessionKey(token);
+  const session = await store().get(key, {
+    type: 'json',
+    consistency: 'strong',
+  });
+
+  if (!session?.projectId || !session?.expiresAt) return null;
+
+  if (Number(session.expiresAt) <= Date.now()) {
+    try { await store().delete(key); } catch {}
     return null;
   }
+
+  return { ...session, token };
+}
+
+async function deleteSession(request) {
+  const token = readCookie(request, SESSION_COOKIE);
+  if (!token) return;
+  try { await store().delete(sessionKey(token)); } catch {}
 }
 
 function sessionCookie(token) {
@@ -173,7 +191,9 @@ function clearSessionCookie() {
 async function listProjectPages(projectId) {
   const prefix = `pages/${projectId.toLowerCase()}/`;
   const result = await store().list({ prefix });
-  return (result.blobs || []).map(({ key, etag }) => ({ key, etag })).sort((a, b) => b.key.localeCompare(a.key));
+  return (result.blobs || [])
+    .map(({ key, etag }) => ({ key, etag }))
+    .sort((a, b) => b.key.localeCompare(a.key));
 }
 
 async function projectPayload(project) {
@@ -211,10 +231,22 @@ async function rateLimitKey(context, projectId) {
 
 async function checkRateLimit(context, projectId) {
   const key = await rateLimitKey(context, projectId);
-  const data = await store().get(key, { type: 'json', consistency: 'strong' });
+  const data = await store().get(key, {
+    type: 'json',
+    consistency: 'strong',
+  });
   const now = Date.now();
-  if (!data || (now - Number(data.startedAt || 0)) > RATE_WINDOW_MS) return { allowed: true, key, count: 0, startedAt: now };
-  return { allowed: Number(data.count || 0) < RATE_MAX_ATTEMPTS, key, count: Number(data.count || 0), startedAt: Number(data.startedAt || now) };
+
+  if (!data || (now - Number(data.startedAt || 0)) > RATE_WINDOW_MS) {
+    return { allowed: true, key, count: 0, startedAt: now };
+  }
+
+  return {
+    allowed: Number(data.count || 0) < RATE_MAX_ATTEMPTS,
+    key,
+    count: Number(data.count || 0),
+    startedAt: Number(data.startedAt || now),
+  };
 }
 
 async function registerFailedLogin(rate) {
@@ -229,59 +261,118 @@ async function clearRateLimit(rate) {
 }
 
 async function requireSessionProject(request) {
-  const session = verifySession(request);
+  const session = await readSession(request);
   if (!session) return null;
+
   const projects = await readProjects();
-  return projects.find((project) => project.id === session.p) || null;
+  return projects.find((project) => project.id === session.projectId) || null;
 }
 
 export default async (request, context) => {
   const url = new URL(request.url);
   const action = url.searchParams.get('action') || '';
 
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204 });
+  }
 
   try {
     if (action === 'login' && request.method === 'POST') {
-      if (!sessionSecret()) return json({ error: 'Portal setup is incomplete: SESSION_SECRET is missing in Netlify.' }, 503);
       const body = await request.json().catch(() => ({}));
       const projectId = cleanProjectId(body.project);
       const password = String(body.password || '');
-      if (!projectId || !password) return json({ error: 'Enter a valid project and password.' }, 400);
 
-      const rate = await checkRateLimit(context, projectId);
-      if (!rate.allowed) return json({ error: 'Too many attempts. Try again in a few minutes.' }, 429);
+      if (!projectId || !password) {
+        return json({
+          error: 'Please enter your project name and password to continue.',
+          code: 'MISSING_LOGIN_DETAILS',
+        }, 400);
+      }
 
       const projects = await readProjects();
+      if (!projects.length) {
+        return json({
+          error: 'This workspace is not available yet. Please contact Ferrn Agency for access.',
+          code: 'PORTAL_NOT_CONFIGURED',
+        }, 503);
+      }
+
+      const rate = await checkRateLimit(context, projectId);
+      if (!rate.allowed) {
+        return json({
+          error: 'Too many login attempts. Please wait a few minutes before trying again.',
+          code: 'TOO_MANY_ATTEMPTS',
+        }, 429);
+      }
+
       const project = projects.find((item) => item.id === projectId);
       if (!project || !passwordMatches(password, project.password)) {
         await registerFailedLogin(rate);
-        return json({ error: 'Access denied. Check the project name and password.' }, 401);
+        return json({
+          error: 'We could not verify those details. Check the project name and password, then try again.',
+          code: 'INVALID_CREDENTIALS',
+        }, 401);
       }
 
       await clearRateLimit(rate);
-      const token = signSession(project.id);
-      return json(await projectPayload(project), 200, { 'Set-Cookie': sessionCookie(token) });
+      const token = await createSession(project.id);
+
+      return json(
+        await projectPayload(project),
+        200,
+        { 'Set-Cookie': sessionCookie(token) },
+      );
     }
 
     if (action === 'me' && request.method === 'GET') {
       const project = await requireSessionProject(request);
-      if (!project) return json({ error: 'Not signed in.' }, 401);
+      if (!project) {
+        return json({
+          error: 'Your session has ended. Please sign in again.',
+          code: 'SESSION_EXPIRED',
+        }, 401);
+      }
       return json(await projectPayload(project));
     }
 
     if (action === 'logout' && request.method === 'POST') {
-      return json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie() });
+      await deleteSession(request);
+      return json({ ok: true }, 200, {
+        'Set-Cookie': clearSessionCookie(),
+      });
     }
 
     if (action === 'page' && request.method === 'GET') {
       const project = await requireSessionProject(request);
-      if (!project) return new Response('Not signed in.', { status: 401, headers: { 'Cache-Control': 'no-store' } });
+      if (!project) {
+        return new Response('Your session has ended. Please return to the Ferrn workspace and sign in again.', {
+          status: 401,
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
+
       const key = url.searchParams.get('key') || '';
       const prefix = `pages/${project.id.toLowerCase()}/`;
-      if (!key.startsWith(prefix)) return new Response('Not allowed.', { status: 403, headers: { 'Cache-Control': 'no-store' } });
-      const html = await store().get(key, { type: 'text', consistency: 'strong' });
-      if (html === null) return new Response('File not found.', { status: 404, headers: { 'Cache-Control': 'no-store' } });
+
+      if (!key.startsWith(prefix)) {
+        return new Response('You do not have access to this project file.', {
+          status: 403,
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
+
+      const html = await store().get(key, {
+        type: 'text',
+        consistency: 'strong',
+      });
+
+      if (html === null) {
+        return new Response('This project file is no longer available.', {
+          status: 404,
+          headers: { 'Cache-Control': 'no-store' },
+        });
+      }
+
       return new Response(html, {
         status: 200,
         headers: {
@@ -294,21 +385,57 @@ export default async (request, context) => {
     }
 
     if (action === 'admin-upload' && request.method === 'POST') {
-      if (!adminAuthorized(request)) return json({ error: 'Invalid admin key.' }, 401);
+      if (!process.env.ADMIN_UPLOAD_KEY) {
+        return json({
+          error: 'Admin tools are not available yet. Please finish the portal setup in Netlify.',
+          code: 'ADMIN_NOT_CONFIGURED',
+        }, 503);
+      }
+
+      if (!adminAuthorized(request)) {
+        return json({
+          error: 'That admin key is not correct. Please check it and try again.',
+          code: 'INVALID_ADMIN_KEY',
+        }, 401);
+      }
+
       const form = await request.formData();
       const projectId = cleanProjectId(form.get('project'));
       const file = form.get('file');
-      if (!projectId || !(file instanceof File)) return json({ error: 'Project and HTML file are required.' }, 400);
+
+      if (!projectId || !(file instanceof File)) {
+        return json({
+          error: 'Choose a project and select an HTML file to upload.',
+          code: 'UPLOAD_DETAILS_REQUIRED',
+        }, 400);
+      }
 
       const projects = await readProjects();
-      if (!projects.some((project) => project.id === projectId)) return json({ error: 'That project is not configured in the portal CSV.' }, 404);
+      if (!projects.some((project) => project.id === projectId)) {
+        return json({
+          error: 'That project is not available in this portal yet.',
+          code: 'PROJECT_NOT_FOUND',
+        }, 404);
+      }
 
       const filename = cleanFilename(file.name);
-      if (!/\.html?$/i.test(filename)) return json({ error: 'Only .html or .htm files are allowed.' }, 400);
-      if (file.size > 4.5 * 1024 * 1024) return json({ error: 'HTML file must be smaller than 4.5 MB.' }, 413);
+      if (!/\.html?$/i.test(filename)) {
+        return json({
+          error: 'Please upload an HTML file ending in .html or .htm.',
+          code: 'INVALID_FILE_TYPE',
+        }, 400);
+      }
+
+      if (file.size > 4.5 * 1024 * 1024) {
+        return json({
+          error: 'This file is too large. Please keep HTML uploads below 4.5 MB.',
+          code: 'FILE_TOO_LARGE',
+        }, 413);
+      }
 
       const html = await file.text();
       const key = `pages/${projectId.toLowerCase()}/${Date.now()}--${filename}`;
+
       await store().set(key, html, {
         metadata: {
           project: projectId,
@@ -316,29 +443,78 @@ export default async (request, context) => {
           uploadedAt: new Date().toISOString(),
         },
       });
+
       return json({ ok: true, key });
     }
 
     if (action === 'admin-csv' && request.method === 'POST') {
-      if (!adminAuthorized(request)) return json({ error: 'Invalid admin key.' }, 401);
-      const csv = await request.text();
-      if (!csv.trim()) return json({ error: 'CSV cannot be empty.' }, 400);
-      if (Buffer.byteLength(csv, 'utf8') > 256 * 1024) return json({ error: 'CSV is too large.' }, 413);
+      if (!process.env.ADMIN_UPLOAD_KEY) {
+        return json({
+          error: 'Admin tools are not available yet. Please finish the portal setup in Netlify.',
+          code: 'ADMIN_NOT_CONFIGURED',
+        }, 503);
+      }
 
-      const projects = parseCSV(csv).map(normalizeProject).filter((project) => project.id && project.password);
-      if (!projects.length) return json({ error: 'CSV must include at least one row with project and password values.' }, 400);
+      if (!adminAuthorized(request)) {
+        return json({
+          error: 'That admin key is not correct. Please check it and try again.',
+          code: 'INVALID_ADMIN_KEY',
+        }, 401);
+      }
+
+      const csv = await request.text();
+      if (!csv.trim()) {
+        return json({
+          error: 'Paste your project CSV before saving.',
+          code: 'EMPTY_CSV',
+        }, 400);
+      }
+
+      if (Buffer.byteLength(csv, 'utf8') > 256 * 1024) {
+        return json({
+          error: 'The project CSV is too large to save.',
+          code: 'CSV_TOO_LARGE',
+        }, 413);
+      }
+
+      const projects = parseCSV(csv)
+        .map(normalizeProject)
+        .filter((project) => project.id && project.password);
+
+      if (!projects.length) {
+        return json({
+          error: 'The CSV needs at least one project with both a project name and password.',
+          code: 'INVALID_CSV',
+        }, 400);
+      }
+
       const invalid = projects.find((project) => !cleanProjectId(project.id));
-      if (invalid) return json({ error: `Invalid project ID: ${invalid.id}` }, 400);
+      if (invalid) {
+        return json({
+          error: `The project ID “${invalid.id}” is not valid. Use letters, numbers, underscores or hyphens only.`,
+          code: 'INVALID_PROJECT_ID',
+        }, 400);
+      }
 
       await store().set('config/projects.csv', csv, {
-        metadata: { updatedAt: new Date().toISOString(), projects: projects.length },
+        metadata: {
+          updatedAt: new Date().toISOString(),
+          projects: projects.length,
+        },
       });
+
       return json({ ok: true, projects: projects.length });
     }
 
-    return json({ error: 'Not found.' }, 404);
+    return json({
+      error: 'The requested portal action could not be found.',
+      code: 'NOT_FOUND',
+    }, 404);
   } catch (error) {
     console.error('Ferrn portal error', error);
-    return json({ error: 'Something went wrong on the server.' }, 500);
+    return json({
+      error: 'We could not connect to your workspace right now. Please try again in a moment.',
+      code: 'TEMPORARY_ERROR',
+    }, 500);
   }
 };
