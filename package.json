@@ -1,0 +1,10 @@
+{
+  "name": "ferrn-projects-files",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ferrn Digital Agency secure project portal for Netlify.",
+  "dependencies": {
+    "@netlify/blobs": "^11.0.1"
+  }
+}
