@@ -46,7 +46,7 @@
     .login-view{height:100%;display:grid;place-items:center}
     .login-card{position:relative;width:min(520px,100%);padding:38px 38px 34px;text-align:center;border:1px solid var(--line);border-radius:30px;background:radial-gradient(circle at 50% 0%,rgba(255,65,0,.07),transparent 42%),linear-gradient(180deg,rgba(24,24,24,.98),rgba(12,12,12,.99));box-shadow:0 34px 110px rgba(0,0,0,.52);overflow:hidden}
     .login-card:before{content:"";position:absolute;left:18%;right:18%;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),transparent);box-shadow:0 0 28px rgba(255,65,0,.7)}
-    .eyebrow{display:inline-block;color:var(--orange);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+    .eyebrow{display:inline-block;color:var(--orange);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
     .login-card h1{margin:12px auto 10px;font-size:clamp(34px,4.3vw,52px);line-height:1.02;letter-spacing:-.045em;max-width:430px}
     .lead{max-width:410px;margin:0 auto;color:#b7b7b7;font-size:13px;line-height:1.6}
     .form-grid{display:grid;gap:12px;margin-top:24px}
@@ -78,39 +78,46 @@
     .dashboard{display:none;height:100%;min-height:0;background:#090909}
     .dashboard.show{display:block}
     .dashboard-shell{height:100dvh;display:grid;grid-template-columns:250px minmax(0,1fr);background:#0a0a0a}
-    .sidebar{min-width:0;background:#080808;border-right:1px solid var(--line);padding:20px 16px 16px;display:flex;flex-direction:column;gap:22px;z-index:20}
+    .sidebar{min-width:0;background:#080808;border-right:1px solid var(--line);padding:22px 16px 16px;display:flex;flex-direction:column;gap:22px;z-index:20}
     .sidebar-brand{display:flex;align-items:center;gap:11px;padding:0 5px}
-    .sidebar-logo{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#050505;border:1px solid var(--line);flex:0 0 auto}
-    .sidebar-logo svg{width:21px;height:21px}.sidebar-brand-copy{min-width:0}.sidebar-brand-name{font-size:14px;font-weight:700;letter-spacing:-.02em}.sidebar-brand-sub{font-size:9px;color:var(--muted2);white-space:nowrap}
-    .sidebar-search{height:38px;border:1px solid var(--line);border-radius:11px;background:#101010;display:flex;align-items:center;gap:8px;padding:0 11px;color:var(--muted2);font-size:10px}.sidebar-search svg{width:15px;flex:0 0 auto}
-    .nav-group{display:grid;gap:7px}.nav-label{padding:0 9px;color:#606060;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.nav-item{height:42px;display:flex;align-items:center;gap:10px;padding:0 11px;border-radius:11px;color:#a9a9a9;font-size:11px;font-weight:600;transition:.18s ease}.nav-item svg{width:17px;height:17px;flex:0 0 auto}.nav-item:hover{background:#121212;color:#fff}.nav-item.active{background:linear-gradient(135deg,var(--orange),#d93800);color:#fff;box-shadow:0 10px 28px rgba(255,65,0,.17)}
+    .sidebar-logo{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;background:#050505;border:1px solid var(--line);flex:0 0 auto}
+    .sidebar-logo svg{width:22px;height:22px}
+    .sidebar-brand-copy{min-width:0}.sidebar-brand-name{font-size:15px;font-weight:700;letter-spacing:-.02em}.sidebar-brand-sub{font-size:10px;color:var(--muted2);white-space:nowrap}
+    .sidebar-search{height:42px;border:1px solid var(--line);border-radius:12px;background:#101010;display:flex;align-items:center;gap:8px;padding:0 11px;color:var(--muted2);transition:.18s ease}
+    .sidebar-search:focus-within{border-color:rgba(255,65,0,.42);box-shadow:0 0 0 3px rgba(255,65,0,.07)}
+    .sidebar-search svg{width:16px;flex:0 0 auto}
+    .sidebar-search input{height:auto;min-width:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#e4e4e4;font-size:11px;font-weight:500}
+    .sidebar-search input:focus{border:0;box-shadow:none}.sidebar-search input::placeholder{color:#6f6f6f;font-size:11px;font-weight:500}
+    .nav-group{display:grid;gap:7px}.nav-label{padding:0 9px;color:#606060;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}.nav-item{height:44px;display:flex;align-items:center;gap:10px;padding:0 11px;border-radius:11px;color:#a9a9a9;font-size:12px;font-weight:600;transition:.18s ease}.nav-item svg{width:18px;height:18px;flex:0 0 auto}.nav-item:hover{background:#121212;color:#fff}.nav-item.active{background:linear-gradient(135deg,var(--orange),#d93800);color:#fff;box-shadow:0 10px 28px rgba(255,65,0,.17)}
     .sidebar-spacer{flex:1}
-    .sidebar-action{width:100%;height:40px;display:flex;align-items:center;gap:10px;padding:0 11px;border:0;border-radius:11px;background:transparent;color:#9a9a9a;font-size:10px;font-weight:600;text-align:left}.sidebar-action:hover{color:#fff;background:#111}.sidebar-action svg{width:16px;height:16px}.sidebar-action.danger:hover{color:#ff8f8f;background:rgba(255,90,90,.06)}
-    .sidebar-card{padding:13px;border:1px solid rgba(255,65,0,.17);border-radius:14px;background:linear-gradient(145deg,rgba(255,65,0,.12),rgba(255,65,0,.025));font-size:9px;color:#9a9a9a}.sidebar-card b{display:block;color:#fff;font-size:10px;margin-bottom:3px}
+    .sidebar-action{width:100%;height:42px;display:flex;align-items:center;gap:10px;padding:0 11px;border:0;border-radius:11px;background:transparent;color:#9a9a9a;font-size:11px;font-weight:600;text-align:left}.sidebar-action:hover{color:#fff;background:#111}.sidebar-action svg{width:17px;height:17px}.sidebar-action.danger:hover{color:#ff8f8f;background:rgba(255,90,90,.06)}
+    .sidebar-card{padding:14px;border:1px solid rgba(255,65,0,.17);border-radius:14px;background:linear-gradient(145deg,rgba(255,65,0,.12),rgba(255,65,0,.025));font-size:10px;color:#9a9a9a}.sidebar-card b{display:block;color:#fff;font-size:11px;margin-bottom:4px}
 
     .dashboard-main{min-width:0;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr);background:radial-gradient(circle at 92% 5%,rgba(255,65,0,.06),transparent 28%),#0c0c0c}
-    .dashboard-header{min-height:96px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 28px;background:rgba(12,12,12,.94);backdrop-filter:blur(14px)}
-    .breadcrumb{display:flex;align-items:center;gap:7px;color:#696969;font-size:9px;font-weight:600;margin-bottom:5px}.breadcrumb span:last-child{color:#a6a6a6}.dashboard-header h1{margin:0 0 3px;font-size:clamp(23px,2.4vw,34px);line-height:1.15;letter-spacing:-.04em}.dashboard-header p{margin:0;color:#8d8d8d;font-size:10px}
-    .header-actions{display:flex;align-items:center;gap:9px}.status-pill{height:34px;padding:0 12px;border:1px solid rgba(255,65,0,.18);border-radius:999px;background:rgba(255,65,0,.07);display:flex;align-items:center;gap:7px;color:#e7e7e7;font-size:9px;font-weight:600;white-space:nowrap}.status-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 12px var(--orange)}
-    .mobile-menu{display:none;width:38px;height:38px;border:1px solid var(--line);border-radius:11px;background:#141414;color:#fff;place-items:center}.mobile-menu svg{width:18px}
+    .dashboard-header{min-height:110px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px 30px;background:rgba(12,12,12,.94);backdrop-filter:blur(14px)}
+    .breadcrumb{display:flex;align-items:center;gap:7px;color:#696969;font-size:10px;font-weight:600;margin-bottom:6px}.breadcrumb span:last-child{color:#a6a6a6}
+    .dashboard-header h1{margin:0 0 5px;font-size:clamp(28px,2.55vw,40px);line-height:1.12;letter-spacing:-.04em}.dashboard-header p{margin:0;color:#969696;font-size:11px}
+    .header-actions{display:flex;align-items:center;gap:9px}.status-pill{height:36px;padding:0 13px;border:1px solid rgba(255,65,0,.18);border-radius:999px;background:rgba(255,65,0,.07);display:flex;align-items:center;gap:7px;color:#e7e7e7;font-size:10px;font-weight:600;white-space:nowrap}.status-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 12px var(--orange)}
+    .mobile-menu{display:none;width:40px;height:40px;border:1px solid var(--line);border-radius:11px;background:#141414;color:#fff;place-items:center}.mobile-menu svg{width:19px}
 
-    .dashboard-scroll{min-height:0;overflow:auto;padding:24px 28px 44px;scrollbar-width:thin;scrollbar-color:rgba(255,65,0,.32) transparent}.dashboard-scroll::-webkit-scrollbar{width:7px}.dashboard-scroll::-webkit-scrollbar-thumb{background:rgba(255,65,0,.32);border-radius:999px}
-    .workspace-panel{max-width:1160px;margin:0 auto}
-    .overview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px}.overview-heading h2{margin:4px 0 2px;font-size:20px;letter-spacing:-.03em}.overview-heading p{margin:0;color:#838383;font-size:10px}.resource-count{flex:0 0 auto;height:31px;padding:0 10px;display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:#101010;color:#8f8f8f;font-size:9px;font-weight:600}
+    .dashboard-scroll{min-height:0;overflow:auto;padding:28px 30px 48px;scrollbar-width:thin;scrollbar-color:rgba(255,65,0,.32) transparent}.dashboard-scroll::-webkit-scrollbar{width:7px}.dashboard-scroll::-webkit-scrollbar-thumb{background:rgba(255,65,0,.32);border-radius:999px}
+    .workspace-panel{width:100%;max-width:none;margin:0}
+    .overview-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}.overview-heading h2{margin:5px 0 3px;font-size:24px;letter-spacing:-.03em}.overview-heading p{margin:0;color:#8a8a8a;font-size:11px}.resource-count{flex:0 0 auto;height:33px;padding:0 11px;display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:#101010;color:#969696;font-size:10px;font-weight:600}
 
-    .cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:13px}
-    .card{grid-column:span 2;position:relative;min-height:164px;padding:16px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(180deg,#151515,#111);display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:hidden}
+    .cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+    .card{grid-column:span 2;position:relative;min-height:176px;padding:18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#151515,#111);display:flex;flex-direction:column;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:hidden}
     .card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0,rgba(255,65,0,.07),transparent 38%);pointer-events:none}
     .card:hover{transform:translateY(-2px);border-color:rgba(255,65,0,.3);box-shadow:0 18px 42px rgba(0,0,0,.24)}
     .card.featured{background:linear-gradient(135deg,#ff4100,#c83200);border-color:rgba(255,255,255,.14);box-shadow:0 16px 34px rgba(255,65,0,.13)}
     .card.featured:before{background:linear-gradient(120deg,rgba(255,255,255,.08),transparent 55%)}
-    .card.repo-card{grid-column:span 3;min-height:204px}
+    .card.repo-card{grid-column:span 3;min-height:218px}
     .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .card-icon{width:39px;height:39px;display:grid;place-items:center;border-radius:11px;background:rgba(255,65,0,.08);color:var(--orange);border:1px solid rgba(255,65,0,.11);flex:0 0 auto}.card-icon svg{width:18px;height:18px}.featured .card-icon{background:rgba(0,0,0,.16);border-color:rgba(255,255,255,.13);color:#fff}
-    .card-type{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#696969}.featured .card-type{color:rgba(255,255,255,.7)}
-    .card-body{position:relative;margin-top:18px;z-index:1}.card h3{margin:0 0 5px;font-size:14px;letter-spacing:-.02em}.card p{margin:0;color:#808080;font-size:9px;line-height:1.55}.featured p{color:rgba(255,255,255,.76)}
-    .card-foot{position:relative;z-index:1;margin-top:auto;padding-top:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:9px;font-weight:600}.card-foot .arrow{font-size:15px;color:var(--orange)}.featured .card-foot .arrow{color:#fff}
-    .repo-warning{position:relative;z-index:1;margin-top:14px;padding:10px 11px;border:1px solid rgba(255,65,0,.18);border-radius:11px;background:rgba(255,65,0,.045);font-size:8px;line-height:1.55;color:#898989}.repo-warning b{color:#fff}
+    .card-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:rgba(255,65,0,.08);color:var(--orange);border:1px solid rgba(255,65,0,.11);flex:0 0 auto}.card-icon svg{width:19px;height:19px}.featured .card-icon{background:rgba(0,0,0,.16);border-color:rgba(255,255,255,.13);color:#fff}
+    .card-type{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#696969}.featured .card-type{color:rgba(255,255,255,.7)}
+    .card-body{position:relative;margin-top:19px;z-index:1}.card h3{margin:0 0 6px;font-size:16px;letter-spacing:-.02em}.card p{margin:0;color:#8a8a8a;font-size:10px;line-height:1.6}.featured p{color:rgba(255,255,255,.8)}
+    .card-foot{position:relative;z-index:1;margin-top:auto;padding-top:19px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;font-weight:600}.card-foot .arrow{font-size:16px;color:var(--orange)}.featured .card-foot .arrow{color:#fff}
+    .repo-warning{position:relative;z-index:1;margin-top:15px;padding:11px 12px;border:1px solid rgba(255,65,0,.18);border-radius:11px;background:rgba(255,65,0,.045);font-size:9px;line-height:1.6;color:#939393}.repo-warning b{color:#fff}
+    .search-empty{grid-column:1/-1;padding:28px;border:1px dashed rgba(255,255,255,.12);border-radius:16px;background:#101010;color:#8a8a8a;font-size:11px;text-align:center}
 
     .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:15}
 
@@ -120,22 +127,25 @@
 
     @media(max-width:1000px){
       .dashboard-shell{grid-template-columns:210px minmax(0,1fr)}
-      .sidebar{padding-inline:12px}.dashboard-header,.dashboard-scroll{padding-left:20px;padding-right:20px}
-      .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.card,.card.repo-card{grid-column:auto}
+      .sidebar{padding-inline:12px}.dashboard-header{padding-left:22px;padding-right:22px}.dashboard-scroll{padding-left:22px;padding-right:22px}
+      .dashboard-header h1{font-size:32px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.card,.card.repo-card{grid-column:auto}
     }
     @media(max-width:760px){
       .dashboard-shell{grid-template-columns:1fr}
-      .sidebar{position:fixed;left:0;top:0;bottom:0;width:min(280px,84vw);transform:translateX(-105%);transition:transform .24s ease;box-shadow:20px 0 60px rgba(0,0,0,.45)}
+      .sidebar{position:fixed;left:0;top:0;bottom:0;width:min(290px,86vw);transform:translateX(-105%);transition:transform .24s ease;box-shadow:20px 0 60px rgba(0,0,0,.45)}
       .dashboard-shell.sidebar-open .sidebar{transform:translateX(0)}
       .dashboard-shell.sidebar-open .sidebar-backdrop{display:block}
       .mobile-menu{display:grid}.status-pill{display:none}
-      .dashboard-header{min-height:88px;padding:15px 16px}.dashboard-header h1{font-size:24px}.dashboard-scroll{padding:18px 16px 34px}
-      .overview-heading{align-items:flex-start}.resource-count{display:none}
-      .cards{grid-template-columns:1fr}.card,.card.repo-card{min-height:154px}
+      .dashboard-header{min-height:94px;padding:16px}.dashboard-header h1{font-size:27px}.dashboard-header p{font-size:10px}.dashboard-scroll{padding:20px 16px 36px}
+      .overview-heading{align-items:flex-start}.resource-count{display:none}.overview-heading h2{font-size:22px}.overview-heading p{font-size:10px}
+      .cards{grid-template-columns:1fr}.card,.card.repo-card{min-height:164px}.card.repo-card{min-height:204px}
     }
     @media(max-width:620px){
       .app:not(.workspace-mode){width:min(100% - 18px,1180px)}.login-card{padding:26px 20px;border-radius:23px}.brand-mark{width:42px;height:42px}.login-card h1{font-size:34px}.footer-row>span{display:none}
-      .dashboard-header p{display:none}.breadcrumb{margin-bottom:4px}.overview-heading h2{font-size:18px}.overview-heading p{font-size:9px}.dashboard-scroll{padding-top:15px}
+      .dashboard-header p{display:none}.breadcrumb{margin-bottom:5px}.dashboard-header h1{font-size:25px}.overview-heading h2{font-size:21px}.dashboard-scroll{padding-top:17px}.card h3{font-size:15px}.card p{font-size:10px}
+    }
+    @media(max-width:420px){
+      .dashboard-header{gap:10px}.dashboard-header h1{font-size:22px}.breadcrumb{font-size:9px}.overview-heading{margin-bottom:16px}.card{padding:16px}.repo-warning{font-size:8.5px}
     }
     @media(prefers-reduced-motion:reduce){*,:before,:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   </style>
@@ -177,13 +187,13 @@
               <span class="sidebar-logo" aria-hidden="true"><svg viewBox="0 0 164 164" fill="none"><path d="M163.419 0V163.419H0V109.064H107.208V52.9022H17.0028V0H163.419Z" fill="#FF4100"/></svg></span>
               <div class="sidebar-brand-copy"><div class="sidebar-brand-name">Ferrn Agency</div><div class="sidebar-brand-sub">Project workspace</div></div>
             </div>
-            <div class="sidebar-search">
+            <label class="sidebar-search" for="resourceSearch">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-              <span>Project resources</span>
-            </div>
+              <input id="resourceSearch" type="search" autocomplete="off" placeholder="Search resources" aria-label="Search project resources">
+            </label>
             <div class="nav-group">
               <div class="nav-label">Workspace</div>
-              <a class="nav-item active" href="#projectEssentials">
+              <a id="essentialsNav" class="nav-item active" href="#projectEssentials">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                 Project essentials
               </a>
@@ -226,7 +236,7 @@
               <section id="projectEssentials" class="workspace-panel">
                 <div class="overview-heading">
                   <div><span class="eyebrow">Overview</span><h2>Project essentials</h2><p>Approved files, references and design resources.</p></div>
-                  <div id="resourceCount" class="resource-count">5 resources</div>
+                  <div id="resourceCount" class="resource-count">0 resources</div>
                 </div>
                 <div id="essentialsCards" class="cards"></div>
               </section>
@@ -265,7 +275,7 @@
   <script>
     const API='/.netlify/functions/portal';
     const $=id=>document.getElementById(id);
-    const state={project:null};
+    const state={project:null,resources:[]};
     const icons={
       folder:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6.7A1.7 1.7 0 0 1 4.7 5h5l2 2H19.3A1.7 1.7 0 0 1 21 8.7v8.6a1.7 1.7 0 0 1-1.7 1.7H4.7A1.7 1.7 0 0 1 3 17.3V6.7Z"/></svg>`,
       figma:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8.5 3.5h7a3 3 0 1 1 0 6h-7a3 3 0 1 1 0-6Zm0 6h3.5v6H8.5a3 3 0 1 1 0-6Zm3.5 0h3.5a3 3 0 1 1-3.5 3v-3Zm-3.5 6H12v2a3.5 3.5 0 1 1-3.5-3.5v1.5Z"/></svg>`,
@@ -282,8 +292,19 @@
     async function api(action,options={}){const res=await fetch(`${API}?action=${encodeURIComponent(action)}`,{credentials:'same-origin',...options,headers:{...(options.headers||{})}});const type=res.headers.get('content-type')||'';const body=type.includes('application/json')?await res.json():await res.text();if(!res.ok){const e=new Error(typeof body==='object'&&body?.error?body.error:String(body||'Request failed'));e.status=res.status;e.code=body?.code;throw e}return body}
     function setupToggle(btnId,inputId,show='Show password',hide='Hide password'){const btn=$(btnId),input=$(inputId);btn.addEventListener('click',()=>{const showing=input.type==='text';input.type=showing?'password':'text';btn.setAttribute('aria-pressed',String(!showing));btn.setAttribute('aria-label',showing?show:hide)})}
     function closeSidebar(){$('dashboardShell').classList.remove('sidebar-open')}
-    function showLogin(){state.project=null;$('app').classList.remove('workspace-mode');$('loginView').classList.remove('hidden');$('dashboardView').classList.remove('show');$('logoutBtn').classList.add('hidden');closeSidebar()}
+    function showLogin(){state.project=null;state.resources=[];$('app').classList.remove('workspace-mode');$('loginView').classList.remove('hidden');$('dashboardView').classList.remove('show');$('logoutBtn').classList.add('hidden');$('resourceSearch').value='';closeSidebar()}
     async function loadSession(){try{renderDashboard(await api('me'))}catch{showLogin()}}
+    function renderResources(query=''){
+      const clean=query.trim().toLowerCase();
+      const visible=clean?state.resources.filter(item=>`${item.title} ${item.description} ${item.type}`.toLowerCase().includes(clean)):state.resources;
+      const total=state.resources.length;
+      $('resourceCount').textContent=clean?`${visible.length} of ${total} resources`:`${total} resource${total===1?'':'s'}`;
+      if(!visible.length){
+        $('essentialsCards').innerHTML=`<div class="search-empty">${clean?`No resources match “${escapeHTML(query.trim())}”.`:'No project resources are configured yet.'}</div>`;
+        return;
+      }
+      $('essentialsCards').innerHTML=visible.map(cardHTML).join('');
+    }
     function renderDashboard(data){
       state.project=data.project;
       $('app').classList.add('workspace-mode');$('loginView').classList.add('hidden');$('dashboardView').classList.add('show');$('logoutBtn').classList.add('hidden');
@@ -296,11 +317,13 @@
         {title:'Back-end repository',description:'Server, API and data-layer development repository.',url:data.project.backendRepo,icon:icons.github,type:'GitHub',repo:true},
         {title:'Front-end repository',description:'Interface and client-side application repository.',url:data.project.frontendRepo,icon:icons.github,type:'GitHub',repo:true}
       ];
-      const valid=essentials.filter(item=>safeURL(item.url));$('resourceCount').textContent=`${valid.length} resource${valid.length===1?'':'s'}`;$('essentialsCards').innerHTML=valid.map(cardHTML).join('')||'<div class="message show error" style="grid-column:1/-1">No project resources are configured yet.</div>';
+      state.resources=essentials.filter(item=>safeURL(item.url));$('resourceSearch').value='';renderResources();
     }
     $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('loginBtn');setMessage($('loginMessage'));btn.classList.remove('wrong');btn.disabled=true;btn.textContent='Checking access…';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:$('projectInput').value.trim(),password:$('passwordInput').value})});$('passwordInput').value='';renderDashboard(data)}catch(err){if(err.code==='INVALID_CREDENTIALS'){btn.classList.add('wrong');btn.textContent='Wrong password';setMessage($('loginMessage'),'Wrong password. Check your project code and password, then try again.');setTimeout(()=>{btn.classList.remove('wrong');btn.textContent='Get access'},1200)}else{setMessage($('loginMessage'),err.message||'We could not verify those details.');btn.textContent='Get access'}}finally{btn.disabled=false}});
     async function logout(){try{await api('logout',{method:'POST'})}catch{}showLogin()}
     $('logoutBtn').addEventListener('click',logout);$('sidebarLogoutBtn').addEventListener('click',logout);
+    $('resourceSearch').addEventListener('input',e=>renderResources(e.target.value));
+    $('essentialsNav').addEventListener('click',closeSidebar);
     $('mobileMenuBtn').addEventListener('click',()=> $('dashboardShell').classList.toggle('sidebar-open'));$('sidebarBackdrop').addEventListener('click',closeSidebar);
     const toggleAdmin=show=>$('adminModal').classList.toggle('show',show);$('adminOpenBtn').addEventListener('click',()=>toggleAdmin(true));$('sidebarAdminBtn').addEventListener('click',()=>{closeSidebar();toggleAdmin(true)});$('adminCloseBtn').addEventListener('click',()=>toggleAdmin(false));$('adminModal').addEventListener('click',e=>{if(e.target===$('adminModal'))toggleAdmin(false)});
     $('csvSaveBtn').addEventListener('click',async()=>{const key=$('adminKey').value,csv=$('csvInput').value.trim();setMessage($('csvMessage'));if(!key||!csv){setMessage($('csvMessage'),'Enter your admin key and project CSV first.');return}const btn=$('csvSaveBtn');btn.disabled=true;btn.textContent='Saving…';try{const data=await api('admin-csv',{method:'POST',headers:{'X-Admin-Key':key,'Content-Type':'text/csv; charset=utf-8'},body:csv});setMessage($('csvMessage'),`Saved ${data.projects} project${data.projects===1?'':'s'} successfully.`,'success')}catch(err){setMessage($('csvMessage'),err.message||'Could not save project access.')}finally{btn.disabled=false;btn.textContent='Save project access'}});
