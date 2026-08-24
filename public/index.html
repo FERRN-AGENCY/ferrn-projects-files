@@ -121,6 +121,12 @@
 
     .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:15}
 
+    .idle-backdrop{position:fixed;inset:0;z-index:70;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.78);backdrop-filter:blur(16px)}
+    .idle-backdrop.show{display:grid}
+    .idle-card{width:min(430px,100%);padding:28px;border:1px solid rgba(255,65,0,.22);border-radius:24px;background:radial-gradient(circle at 50% 0,rgba(255,65,0,.11),transparent 44%),#111;box-shadow:0 32px 90px rgba(0,0,0,.58);text-align:center}
+    .idle-icon{width:50px;height:50px;margin:0 auto 16px;display:grid;place-items:center;border-radius:15px;background:rgba(255,65,0,.1);border:1px solid rgba(255,65,0,.18);color:var(--orange)}
+    .idle-icon svg{width:24px;height:24px}.idle-card h2{margin:0 0 8px;font-size:24px;letter-spacing:-.035em}.idle-card p{margin:0 auto 18px;max-width:340px;color:#9f9f9f;font-size:12px;line-height:1.65}.idle-card strong{color:#fff}.idle-countdown{color:var(--orange);font-weight:800}.idle-card .primary{height:48px}
+
     .modal-backdrop{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(14px)}.modal-backdrop.show{display:grid}
     .modal{width:min(760px,100%);max-height:calc(100dvh - 40px);overflow:auto;border:1px solid var(--line);border-radius:24px;background:#111;box-shadow:0 34px 100px rgba(0,0,0,.55)}
     .modal-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line);background:rgba(17,17,17,.96);backdrop-filter:blur(10px)}.modal-head h2{margin:0;font-size:20px}.modal-body{display:grid;gap:16px;padding:20px}.panel{padding:16px;border:1px solid var(--line);border-radius:17px;background:#0c0c0c}.panel h3{margin-bottom:5px}.panel p{color:#929292;font-size:10px}.panel label{display:block;margin-bottom:7px;color:#bdbdbd;font-size:10px;font-weight:600}.panel input{text-align:left}.panel textarea{min-height:220px;padding:13px;text-align:left;resize:vertical}.panel-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.panel-actions .primary{width:auto;height:40px;padding:0 15px}.hint{font-size:9px!important;color:#777!important}.hidden{display:none!important}
@@ -142,7 +148,7 @@
     }
     @media(max-width:620px){
       .app:not(.workspace-mode){width:min(100% - 18px,1180px)}.login-card{padding:26px 20px;border-radius:23px}.brand-mark{width:42px;height:42px}.login-card h1{font-size:34px}.footer-row>span{display:none}
-      .dashboard-header p{display:none}.breadcrumb{margin-bottom:5px}.dashboard-header h1{font-size:25px}.overview-heading h2{font-size:21px}.dashboard-scroll{padding-top:17px}.card h3{font-size:15px}.card p{font-size:10px}
+      .dashboard-header p{display:none}.breadcrumb{margin-bottom:5px}.dashboard-header h1{font-size:25px}.overview-heading h2{font-size:21px}.dashboard-scroll{padding-top:17px}.card h3{font-size:15px}.card p{font-size:10px}.idle-card{padding:24px 20px}.idle-card h2{font-size:22px}
     }
     @media(max-width:420px){
       .dashboard-header{gap:10px}.dashboard-header h1{font-size:22px}.breadcrumb{font-size:9px}.overview-heading{margin-bottom:16px}.card{padding:16px}.repo-warning{font-size:8.5px}
@@ -249,6 +255,16 @@
     <footer><div class="footer-row"><span>© <span id="year"></span> Ferrn Digital Agency · We Build What’s Next.</span><button id="adminOpenBtn" class="manage-link" type="button">Manage projects</button></div></footer>
   </div>
 
+  <div id="idleModal" class="idle-backdrop" role="dialog" aria-modal="true" aria-labelledby="idleTitle" aria-describedby="idleText">
+    <div class="idle-card">
+      <div class="idle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.6 1.6"/></svg></div>
+      <span class="eyebrow">Security check</span>
+      <h2 id="idleTitle">Still working?</h2>
+      <p id="idleText">You have been inactive for 5 minutes. Your workspace will sign out in <strong><span id="idleCountdown" class="idle-countdown">10</span> seconds</strong>.</p>
+      <button id="continueSessionBtn" class="primary" type="button">Continue session</button>
+    </div>
+  </div>
+
   <div id="adminModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
     <div class="modal">
       <div class="modal-head"><h2 id="adminTitle">Manage projects</h2><button id="adminCloseBtn" class="ghost" type="button">Close</button></div>
@@ -276,6 +292,12 @@
     const API='/.netlify/functions/portal';
     const $=id=>document.getElementById(id);
     const state={project:null,resources:[]};
+    const IDLE_LIMIT_MS=5*60*1000;
+    const IDLE_WARNING_SECONDS=10;
+    let idleTimer=null;
+    let idleCountdownTimer=null;
+    let idleWarningActive=false;
+    let lastMouseActivity=0;
     const icons={
       folder:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6.7A1.7 1.7 0 0 1 4.7 5h5l2 2H19.3A1.7 1.7 0 0 1 21 8.7v8.6a1.7 1.7 0 0 1-1.7 1.7H4.7A1.7 1.7 0 0 1 3 17.3V6.7Z"/></svg>`,
       figma:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8.5 3.5h7a3 3 0 1 1 0 6h-7a3 3 0 1 1 0-6Zm0 6h3.5v6H8.5a3 3 0 1 1 0-6Zm3.5 0h3.5a3 3 0 1 1-3.5 3v-3Zm-3.5 6H12v2a3.5 3.5 0 1 1-3.5-3.5v1.5Z"/></svg>`,
@@ -292,17 +314,32 @@
     async function api(action,options={}){const res=await fetch(`${API}?action=${encodeURIComponent(action)}`,{credentials:'same-origin',...options,headers:{...(options.headers||{})}});const type=res.headers.get('content-type')||'';const body=type.includes('application/json')?await res.json():await res.text();if(!res.ok){const e=new Error(typeof body==='object'&&body?.error?body.error:String(body||'Request failed'));e.status=res.status;e.code=body?.code;throw e}return body}
     function setupToggle(btnId,inputId,show='Show password',hide='Hide password'){const btn=$(btnId),input=$(inputId);btn.addEventListener('click',()=>{const showing=input.type==='text';input.type=showing?'password':'text';btn.setAttribute('aria-pressed',String(!showing));btn.setAttribute('aria-label',showing?show:hide)})}
     function closeSidebar(){$('dashboardShell').classList.remove('sidebar-open')}
-    function showLogin(){state.project=null;state.resources=[];$('app').classList.remove('workspace-mode');$('loginView').classList.remove('hidden');$('dashboardView').classList.remove('show');$('logoutBtn').classList.add('hidden');$('resourceSearch').value='';closeSidebar()}
+    function stopIdleWatch(){
+      clearTimeout(idleTimer);clearInterval(idleCountdownTimer);idleTimer=null;idleCountdownTimer=null;idleWarningActive=false;$('idleModal').classList.remove('show');
+    }
+    function startIdleWatch(){
+      if(!state.project)return;clearTimeout(idleTimer);idleTimer=setTimeout(showIdleWarning,IDLE_LIMIT_MS);
+    }
+    function continueIdleSession(){
+      if(!state.project)return;clearInterval(idleCountdownTimer);idleCountdownTimer=null;idleWarningActive=false;$('idleModal').classList.remove('show');$('idleCountdown').textContent=String(IDLE_WARNING_SECONDS);startIdleWatch();
+    }
+    function registerActivity(){
+      if(!state.project)return;if(idleWarningActive){continueIdleSession();return}startIdleWatch();
+    }
+    function showIdleWarning(){
+      if(!state.project)return;idleWarningActive=true;let remaining=IDLE_WARNING_SECONDS;$('idleCountdown').textContent=String(remaining);$('idleModal').classList.add('show');clearInterval(idleCountdownTimer);idleCountdownTimer=setInterval(()=>{remaining-=1;$('idleCountdown').textContent=String(Math.max(remaining,0));if(remaining<=0){clearInterval(idleCountdownTimer);idleCountdownTimer=null;idleLogout()}},1000);
+    }
+    async function idleLogout(){
+      stopIdleWatch();try{await api('logout',{method:'POST'})}catch{}showLogin();setMessage($('loginMessage'),'You were logged out after 5 minutes of inactivity. Please sign in again.');
+    }
+    function showLogin(){state.project=null;state.resources=[];stopIdleWatch();$('app').classList.remove('workspace-mode');$('loginView').classList.remove('hidden');$('dashboardView').classList.remove('show');$('logoutBtn').classList.add('hidden');$('resourceSearch').value='';closeSidebar()}
     async function loadSession(){try{renderDashboard(await api('me'))}catch{showLogin()}}
     function renderResources(query=''){
       const clean=query.trim().toLowerCase();
       const visible=clean?state.resources.filter(item=>`${item.title} ${item.description} ${item.type}`.toLowerCase().includes(clean)):state.resources;
       const total=state.resources.length;
       $('resourceCount').textContent=clean?`${visible.length} of ${total} resources`:`${total} resource${total===1?'':'s'}`;
-      if(!visible.length){
-        $('essentialsCards').innerHTML=`<div class="search-empty">${clean?`No resources match “${escapeHTML(query.trim())}”.`:'No project resources are configured yet.'}</div>`;
-        return;
-      }
+      if(!visible.length){$('essentialsCards').innerHTML=`<div class="search-empty">${clean?`No resources match “${escapeHTML(query.trim())}”.`:'No project resources are configured yet.'}</div>`;return}
       $('essentialsCards').innerHTML=visible.map(cardHTML).join('');
     }
     function renderDashboard(data){
@@ -317,14 +354,18 @@
         {title:'Back-end repository',description:'Server, API and data-layer development repository.',url:data.project.backendRepo,icon:icons.github,type:'GitHub',repo:true},
         {title:'Front-end repository',description:'Interface and client-side application repository.',url:data.project.frontendRepo,icon:icons.github,type:'GitHub',repo:true}
       ];
-      state.resources=essentials.filter(item=>safeURL(item.url));$('resourceSearch').value='';renderResources();
+      state.resources=essentials.filter(item=>safeURL(item.url));$('resourceSearch').value='';renderResources();startIdleWatch();
     }
     $('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('loginBtn');setMessage($('loginMessage'));btn.classList.remove('wrong');btn.disabled=true;btn.textContent='Checking access…';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:$('projectInput').value.trim(),password:$('passwordInput').value})});$('passwordInput').value='';renderDashboard(data)}catch(err){if(err.code==='INVALID_CREDENTIALS'){btn.classList.add('wrong');btn.textContent='Wrong password';setMessage($('loginMessage'),'Wrong password. Check your project code and password, then try again.');setTimeout(()=>{btn.classList.remove('wrong');btn.textContent='Get access'},1200)}else{setMessage($('loginMessage'),err.message||'We could not verify those details.');btn.textContent='Get access'}}finally{btn.disabled=false}});
-    async function logout(){try{await api('logout',{method:'POST'})}catch{}showLogin()}
+    async function logout(){stopIdleWatch();try{await api('logout',{method:'POST'})}catch{}showLogin()}
     $('logoutBtn').addEventListener('click',logout);$('sidebarLogoutBtn').addEventListener('click',logout);
     $('resourceSearch').addEventListener('input',e=>renderResources(e.target.value));
     $('essentialsNav').addEventListener('click',closeSidebar);
     $('mobileMenuBtn').addEventListener('click',()=> $('dashboardShell').classList.toggle('sidebar-open'));$('sidebarBackdrop').addEventListener('click',closeSidebar);
+    $('continueSessionBtn').addEventListener('click',continueIdleSession);
+    ['pointerdown','keydown','touchstart','wheel','scroll'].forEach(eventName=>document.addEventListener(eventName,registerActivity,{passive:true}));
+    document.addEventListener('mousemove',()=>{const now=Date.now();if(now-lastMouseActivity<1000)return;lastMouseActivity=now;registerActivity()},{passive:true});
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.project)registerActivity()});
     const toggleAdmin=show=>$('adminModal').classList.toggle('show',show);$('adminOpenBtn').addEventListener('click',()=>toggleAdmin(true));$('sidebarAdminBtn').addEventListener('click',()=>{closeSidebar();toggleAdmin(true)});$('adminCloseBtn').addEventListener('click',()=>toggleAdmin(false));$('adminModal').addEventListener('click',e=>{if(e.target===$('adminModal'))toggleAdmin(false)});
     $('csvSaveBtn').addEventListener('click',async()=>{const key=$('adminKey').value,csv=$('csvInput').value.trim();setMessage($('csvMessage'));if(!key||!csv){setMessage($('csvMessage'),'Enter your admin key and project CSV first.');return}const btn=$('csvSaveBtn');btn.disabled=true;btn.textContent='Saving…';try{const data=await api('admin-csv',{method:'POST',headers:{'X-Admin-Key':key,'Content-Type':'text/csv; charset=utf-8'},body:csv});setMessage($('csvMessage'),`Saved ${data.projects} project${data.projects===1?'':'s'} successfully.`,'success')}catch(err){setMessage($('csvMessage'),err.message||'Could not save project access.')}finally{btn.disabled=false;btn.textContent='Save project access'}});
     setupToggle('passwordToggle','passwordInput');setupToggle('adminKeyToggle','adminKey','Show admin key','Hide admin key');$('year').textContent=new Date().getFullYear();const params=new URLSearchParams(location.search);if(params.get('project'))$('projectInput').value=params.get('project').toUpperCase();loadSession();
